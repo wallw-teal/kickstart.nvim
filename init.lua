@@ -212,13 +212,22 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
+--  Use <leader>+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+vim.keymap.set('n', '<c-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+vim.keymap.set('n', '<c-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+vim.keymap.set('n', '<c-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+vim.keymap.set('n', '<c-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- These mappings control the size of splits (height/width)
+vim.keymap.set("n", "<M-,>", "<c-w>5<")
+vim.keymap.set("n", "<M-.>", "<c-w>5>")
+vim.keymap.set("n", "<M-t>", "<C-W>+")
+vim.keymap.set("n", "<M-s>", "<C-W>-")
+
+-- execute the current file
+vim.keymap.set("n", "<leader><leader>x", "<cmd>source %<CR>", { desc = "Execute the current file" })
 
 -- greatest remap ever: paste from system clipboard
 vim.keymap.set('x', '<leader>p', [["_dP]])
@@ -391,6 +400,7 @@ require('lazy').setup({
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
+      local data = assert(vim.fn.stdpath "data") --[[@as string]]
       require('telescope').setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
@@ -401,15 +411,21 @@ require('lazy').setup({
         --   },
         -- },
         -- pickers = {}
+        fzf = {},
+        history = {
+          path = vim.fs.joinpath(data, "telescope_history.sqlite3"),
+          limit = 100,
+        },
         extensions = {
           ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
+            require('telescope.themes').get_dropdown {},
           },
         },
       }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
+      pcall(require('telescope').load_extension, 'smart_history')
       pcall(require('telescope').load_extension, 'ui-select')
 
       -- See `:help telescope.builtin`
@@ -755,12 +771,32 @@ require('lazy').setup({
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'onsails/lspkind-nvim',
+
+      -- If you want to add a bunch of pre-configured snippets,
+      --    you can use this plugin to help you. It even has snippets
+      --    for various frameworks/libraries/etc. but you will have to
+      --    set up the ones that are useful for you.
+      'rafamadriz/friendly-snippets',
     },
     config = function()
+      local lspkind = require('lspkind')
+      lspkind.init()
+
       -- See `:help cmp`
       local cmp = require 'cmp'
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
+
+      luasnip.config.set_config {
+        history = false,
+        updateevents = "TextChanged,TextChangedI",
+      }
+
+      -- load custom snippets
+      for _, ft_path in ipairs(vim.api.nvim_get_runtime_file("lua/custom/snippets/*.lua", true)) do
+        loadfile(ft_path)()
+      end
 
       cmp.setup {
         snippet = {
@@ -780,9 +816,9 @@ require('lazy').setup({
           -- Select the [p]revious item
           ['<C-p>'] = cmp.mapping.select_prev_item(),
 
-          -- Scroll the documentation window [b]ack / [f]orward
-          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          -- Scroll the documentation window [u]p / [d]own
+          ['<C-u>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-d>'] = cmp.mapping.scroll_docs(4),
 
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
