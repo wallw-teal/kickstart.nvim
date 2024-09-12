@@ -635,6 +635,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         gopls = {},
+        templ = {},
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -643,8 +644,11 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        tsserver = {},
+        ts_ls = {},
         tailwindcss = {},
+        svelte = {},
+        html = {},
+        htmx = {},
         elixirls = {
           cmd = { '/Users/williamwall/.asdf/shims/elixir-ls' },
         },
@@ -693,6 +697,9 @@ require('lazy').setup({
           end,
         },
       }
+
+      -- setup gleam separately. It is not available from mason-tool-installer
+      require('lspconfig').gleam.setup({})
     end,
   },
 
@@ -728,10 +735,10 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        javascript = { { 'prettierd', 'prettier', stop_after_first = true } },
-        javascriptreact = { { 'prettierd', 'prettier', stop_after_first = true } },
-        typescript = { { 'prettierd', 'prettier', stop_after_first = true } },
-        typescriptreact = { { 'prettierd', 'prettier', stop_after_first = true } },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
@@ -937,6 +944,7 @@ require('lazy').setup({
           'diff',
           'eex',
           'elixir',
+          'gleam',
           'go',
           'heex',
           'html',
@@ -998,7 +1006,9 @@ require('lazy').setup({
   {
     'supermaven-inc/supermaven-nvim',
     config = function()
-      require('supermaven-nvim').setup({})
+      require('supermaven-nvim').setup({
+        ignore_filetypes = { 'gleam' },
+      })
     end
   },
   { 'eandrju/cellular-automaton.nvim' },
